@@ -1,4 +1,4 @@
-include ../procedures/simple.proc
+include ../procedures/test_simple.proc
 
 @plan(2)
 

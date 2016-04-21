@@ -1,3 +1,208 @@
-appendInfoLine: "# test_simple.proc is deprecated. Include instead simple.proc"
+# Simple test suite for Praat
+#
+# This script is part of the testsimple CPrAN plugin for Praat.
+# The latest version is available through CPrAN or at
+# <http://cpran.net/plugins/testsimple>
+#
+# The testsimple plugin is free software: you can redistribute it
+# and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, either
+# version 3 of the License, or (at your option) any later version.
+#
+# The testsimple plugin is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+# of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with selection. If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2015 Jose Joaquin Atria
 
-include ../../plugin_testsimple/procedures/simple.proc
+appendInfoLine: "# The ""testsimple"" plugin is deprecated. Use ""tap"" instead"
+
+#
+# Planning procedures
+#
+
+# Plan a test suite
+# Argument is the number of tests to run
+#
+procedure plan: .total_tests
+  if variableExists("plan.current_plan")
+    exitScript: "Already running a test plan"
+  endif
+
+  ok_selection.original = numberOfSelected()
+
+  if .total_tests != undefined
+    appendInfoLine: "1..", .total_tests
+  endif
+
+  .current_plan = .total_tests
+  .test     = 0
+  .skipping = 0
+  .todo     = 0
+endproc
+
+# Declare an undefined number of tests
+# The plan will be printed when @done_testing is called, and
+# the number of tests that were run will be printed
+#
+procedure no_plan ()
+  @plan: undefined
+endproc
+
+# Mark a test suite as completed
+#
+procedure done_testing ()
+  if !variableExists("plan.current_plan")
+    exitScript: "No test plan"
+  endif
+
+  if plan.total_tests == undefined
+    appendInfoLine: "1..", plan.test
+  else
+    if plan.test < plan.total_tests
+      exitScript: "Incomplete test suite"
+    endif
+  endif
+endproc
+
+#
+# Testing procedures
+#
+
+# Basic test procedure
+# First argument is a boolean value for the test: true means
+# passed, false means failed.
+# Second argument is the name of the test.
+#
+procedure ok: .value, .name$
+  if !variableExists("plan.current_plan")
+    exitScript: "No test plan"
+  endif
+
+  plan.test += 1
+
+  if plan.skipping == undefined or plan.skipping
+    plan.skipping -= 1
+    .name$ = " # SKIP " + skip.why$
+    .value = 1
+  else
+    if plan.todo == undefined or plan.todo
+      plan.todo -= 1
+      .name$ = .name$ + " # TODO " + todo.why$
+    endif
+  endif
+
+  appendInfo: if .value then "" else "not " fi +
+    ... "ok " + string$(plan.test)
+
+  appendInfoLine: if .name$ != "" then " - " + .name$ else "" fi
+endproc
+
+# Test a formula
+# First argument is a string that can be interpreted as a formula
+# A formula that evaluates to true will apss, one that evaluates
+# to false will fail.
+# Second argument is the name of the test
+#
+procedure ok_formula: .formula$, .name$
+  if plan.skipping != undefined and !plan.skipping
+    .value = Calculator: .formula$
+  else
+    .value = 1
+  endif
+  @ok(.value, .name$)
+endproc
+
+# Test whether objects created during testing have been removed
+#
+procedure ok_selection ()
+  select all
+  .current = numberOfSelected()
+  .result = .current == .original
+
+  @ok: .result, "Removed all local objects"
+
+  if !.result
+    for .i to .current
+      .id[.i] = selected(.i)
+    endfor
+    for .i to .current
+      selectObject: .id[.i]
+      appendInfoLine: "# " + selected$()
+    endfor
+    select all
+  endif
+endproc
+
+#
+# SKIP procedures
+#
+
+# Mark a number of tests as skipped tests
+# A skipped test is marked as a success regardless of the
+# actual value of the test result
+# First argument is the number of tests to skip. An undefined
+# number of tests to skip means to continue skipping until
+# the next call to @end_skip
+# Second argument is the reason why they are skipped
+#
+procedure skip: .how_many, .why$
+  plan.skipping = .how_many
+endproc
+
+# Mark all tests as skipped
+# This is irreversible: all following tests will be skipped until
+# the end of the suite
+# Only argument is the reason why.
+#
+procedure skip_all: .why$
+  .keep_skipping = 1
+  @skip(undefined, .why$)
+endproc
+
+# Stop a skip block
+# Skip blocks are started by calling @skip with an undefined number
+# of tests to skip. They are ended by this procedure.
+#
+procedure end_skip ()
+  if !variableExists("skip_all.keep_skipping")
+    plan.skipping = 0
+  endif
+endproc
+
+#
+# TODO procedures
+#
+
+# Mark a number of tests as to-do tests
+# To-do tests are evaluated as normal, but a failing one does not
+# mean the test suite has failed.
+# First argument is the number of tests to mark as to-do. An undefined
+# number of to-do tests means to keep marking them as to-do until
+# the next call to @end_todo
+# Second argument is the reason why they are marked as to-do
+#
+procedure todo: .how_many, .why$
+  plan.todo = .how_many
+endproc
+
+# Stop a to-do block
+# To-do blocks are started by calling @todo with an undefined number
+# of to-do tests. They are ended by this procedure.
+#
+procedure end_todo ()
+  plan.todo = 0
+endproc
+
+# Bail out
+# Abort all tests in case of some critical failure
+# Only argument is the reason why the test suite is aborted
+#
+procedure bail_out: .why$
+  appendInfoLine: "Bail out! ", .why$
+  exitScript()
+endproc

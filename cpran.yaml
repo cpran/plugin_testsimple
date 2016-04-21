@@ -9,16 +9,12 @@ Recommends:
 License: GPL3
 Readme: readme.md
 Description:
-  Short: simple implementation of the Test Anything Protocol
+  Short: (deprecated) simple implementation of the Test Anything Protocol
   Long: >
-    The Test Anything Protocol (TAP) offers a unified format for a stream of
-    test results that can be used for all sorts of testing.
+    This plugin originally implemented an interface for testing using the 
+    Test Anything Protocol (TAP).
 
-    This plugin implements a basic interface to set up tests in Praat scripts.
-    It is heavily influenced by the similarly named CPAN module.
-
-    Despite its simplicity, it allows a safe interface to run planned and
-    unplanned tests, as well as to conditionally skip or mark them as
-    incomplete tests. This is possible both for a specified number of tests,
-    and as a test block. Mass skipping, and test-suite interruption are
-    also possible.
+    This plugin has been superseded by the "tap" plugin, which offers a 
+    better interface for testing, with additional optional features.
+    Development in this plugin has moved to the "tap" plugin. This will
+    remain available for backwards compatibility only.

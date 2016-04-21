@@ -1,8 +1,6 @@
 - next: # unreleased
 - v0.0.9:
-  - Changes:
-    - ok_selection procedures now make smarter object comparisons
-    - diag procedure in more.proc processes multiline messages
+  - Discontinued plugin: superseded by the "tap" plugin.
 - v0.0.8:
   - New:
     - ok_selection checks that selection is the same as when
