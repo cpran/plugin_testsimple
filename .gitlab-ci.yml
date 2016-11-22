@@ -1,33 +1,15 @@
-Praat 5.4.22:
-  script:
-    - prove -v --exec "praat-5.4.22 --ansi --pref-dir=../.."
-  tags:
-    - cpran
-  allow_failure: true
+image: cpran:latest
 
-Praat 6.0.03:
-  script:
-    - prove -v --exec "praat-6.0.03 --ansi --pref-dir=../.. --run"
-  tags:
-    - cpran
-  allow_failure: true
+variables:
+  CPRAN_PREF_DIR: "/builds/$CI_PROJECT_NAMESPACE"
 
-Praat 6.0.11:
-  script:
-    - prove -v --exec "praat-6.0.11 --ansi --pref-dir=../.. --run"
-  tags:
-    - cpran
-  allow_failure: true
+before_script:
+  - cpran init --notest --reinstall
+  - cpran update
+  - cpran deps | cpran --yes install --notest -
 
-Praat 6.0.13:
+Praat:
   script:
-    - prove -v --exec "praat-6.0.13 --ansi --pref-dir=../.. --run"
-  tags:
-    - cpran
-  allow_failure: true
-
-Praat 6.0.14:
-  script:
-    - prove -v --exec "praat-6.0.14 --ansi --pref-dir=../.. --run"
+    - prove -v --exec "praat --ansi --pref-dir=$CPRAN_PREF_DIR --run"
   tags:
     - cpran
